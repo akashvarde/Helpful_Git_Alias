@@ -15,7 +15,7 @@ then
    git pull origin $deployement_env || echo "${RED}Unable to pull from remote origin/$deployement_env branch${NC}"
    echo "Pull successful..."
    echo "Merging changes from $currentBranch to Release branch..."
-   merge_op = $(git merge $currentBranch)  
+   merge_op=$(git merge $currentBranch)  
    echo "$merge_op"
    
 else 
