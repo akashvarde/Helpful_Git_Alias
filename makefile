@@ -26,8 +26,7 @@ all:
 ##NEW INSTALL SCRIPT
 
 # Install target
-install:
-    @echo "Installing scripts from $(pwd)"
+install: 
 	mkdir -p $(BINDIR)
 	install -m 0755 $(EXEC_FILES) $(BINDIR)
 
