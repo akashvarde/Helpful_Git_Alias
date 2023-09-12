@@ -7,7 +7,8 @@ MANDIR ?= $(DATAROOTDIR)/man
 ALIAS_DIR = alias
 # files that need mode 755
 EXEC_FILES = git-standup
-
+# List of scripts in the "alias" folder
+SCRIPTS = $(wildcard $(ALIAS_DIR)/*)
 .PHONY: check all install uninstall shellcheck shfmt
 
 all:
@@ -24,8 +25,7 @@ all:
 # 	rm -f $(EXEC_FILES)
 
 ##NEW INSTALL SCRIPT
-# List of scripts in the "alias" folder
-SCRIPTS = $(wildcard $(ALIAS_DIR)/*)
+
 # Install target
 install: $(SCRIPTS)
     @echo "Installing scripts to $(INSTALL_DIR)"
