@@ -3,14 +3,46 @@ RED='\033[0;31m'     # Red color
 NC='\033[0m'          # No color (reset)
 deployement_env=$1 # First parameter wtll be the DEPLOYEMENT ENV
 currentBranch=$(git symbolic-ref --short -q HEAD) # Getting the current branch 
+
+
+
+function checkout_to_deployment_env() {
+    echo "$deployment_env"
+    exit 1
+
+    echo "Checking out to Deployment Branch: $deployment_env"
+
+    # Check if the deployment branch exists locally
+    if ! git show-ref --verify --quiet "refs/heads/$deployment_env"; then
+        echo "Error: The deployment branch '$deployment_env' does not exist locally."
+        echo "Please make sure the branch exists and is spelled correctly."
+        return 1
+    fi
+
+    # Check for uncommitted changes
+    if ! git diff --quiet; then
+        echo "Error: There are uncommitted changes in the current branch."
+        echo "Please commit or stash your changes before switching to '$deployment_env'."
+        return 1
+    fi
+
+    # Check out to the deployment branch
+    git checkout "$deployment_env"
+    return $?
+}
+
+
+
+
 if [ ! -z "$1" ] # checking if the commtt message is present. If not then aborting. 
 then 
    echo "Creating a deployement for $deployement_env"
-   echo "Checkout to Deployement Branch" 
-   git checkout $deployement_env || echo "Unable to checkout to $deployement_env , Check if all your changes are commited in current branch and if $deployement_env branch exist on your local git"
+   checkout_to_deployment_env
+   
    formatted_date=$(date +"%d_%m_%Y_%H_%M_%S")
-   echo "Creating new release branch RELEASE/$deployement_env/${currentBranch}_$formatted_date"
-   git checkout -b RELEASE/$deployement_env/${currentBranch}_$formatted_date || echo "${RED}Unable to create release branch from $deployement_env ${NC}"
+   new_branch="$currentBranch"_"$formatted_date"
+   echo "Creating new release branch RELEASE/$deployement_env/$new_branch"
+   git checkout -b RELEASE/$deployement_env/$new_branch || echo "${RED}Unable to create release branch from $deployement_env ${NC}"
    echo "Pulling changes from origin/$deployement_env"
    git pull origin $deployement_env || echo "${RED}Unable to pull from remote origin/$deployement_env branch${NC}"
    echo "Pull successful..."
@@ -21,3 +53,5 @@ then
 else 
     echo "${RED}Deployement Branch not provided${NC}"
 fi
+
+ 
