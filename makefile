@@ -3,12 +3,11 @@ EXEC_PREFIX ?= $(PREFIX)
 BINDIR ?= $(EXEC_PREFIX)/bin
 DATAROOTDIR ?= $(PREFIX)/share
 DATADIR ?= $(DATAROOTDIR)
-MANDIR ?= $(DATAROOTDIR)/man
-ALIAS_DIR = alias
-# files that need mode 755
-EXEC_FILES = git-standup
-# List of scripts in the "alias" folder
-SCRIPTS = $(wildcard $(ALIAS_DIR)/*)
+MANDIR ?= $(DATAROOTDIR)/man 
+# Directory containing the files to be installed
+ALIAS_DIR := aliases
+# Get a list of all files in the ALIAS_DIR with a .sh extension
+EXEC_FILES := $(wildcard $(ALIAS_DIR)/*.sh)
 .PHONY: check all install uninstall shellcheck shfmt
 
 all:
@@ -27,12 +26,10 @@ all:
 ##NEW INSTALL SCRIPT
 
 # Install target
-install: $(SCRIPTS)
-    @echo "Installing scripts to $(EXEC_FILES)"
-    mkdir -p $(EXEC_FILES)
-    cp $^ $(EXEC_FILES)
-    chmod +x $(addprefix $(EXEC_FILES)/,$(notdir $^))
-    @echo "Installation complete"
+install:
+    @echo "Installing scripts from $(INSTALL_DIR)"
+	mkdir -p $(BINDIR)
+	install -m 0755 $(EXEC_FILES) $(BINDIR)
 
 # Uninstall target (optional)
 # uninstall:
