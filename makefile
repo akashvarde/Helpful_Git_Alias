@@ -28,10 +28,10 @@ all:
 
 # Install target
 install: $(SCRIPTS)
-    @echo "Installing scripts to $(INSTALL_DIR)"
-    mkdir -p $(INSTALL_DIR)
-    cp $^ $(INSTALL_DIR)
-    chmod +x $(addprefix $(INSTALL_DIR)/,$(notdir $^))
+    @echo "Installing scripts to $(EXEC_FILES)"
+    mkdir -p $(EXEC_FILES)
+    cp $^ $(EXEC_FILES)
+    chmod +x $(addprefix $(EXEC_FILES)/,$(notdir $^))
     @echo "Installation complete"
 
 # Uninstall target (optional)
