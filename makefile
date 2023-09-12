@@ -7,7 +7,7 @@ MANDIR ?= $(DATAROOTDIR)/man
 # Directory containing the files to be installed
 ALIAS_DIR := aliases
 # Get a list of all files in the ALIAS_DIR with a .sh extension
-EXEC_FILES := $(wildcard $(ALIAS_DIR)/*.sh)
+EXEC_FILES := $(wildcard $(ALIAS_DIR)/*)
 .PHONY: check all install uninstall shellcheck shfmt
 
 all:
