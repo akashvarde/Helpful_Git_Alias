@@ -18,7 +18,7 @@ GLOBAL_BIN_DIR="/usr/local/bin/$folder_name"
 
 
 
-
+rm -rf helpful_git_alias
 
 # Check if the script is running with superuser privileges
 if [ "$(id -u)" -ne 0 ]; then
@@ -50,41 +50,28 @@ if [ -f "/usr/local/bin/git-createdeployement" ]; then
     echo "${RED}Invalid choice. \nAborting...${NC}"
     exit 1
     fi
-else
-    echo "${GREEN}Installing...${NC}"
-    git clone https://github.com/akashvarde/helpful_git_alias.git --depth=1 || {
-      echo >&2 "${RED}Clone failed with $?${NC}"
-      exit 1
-    }
-    # Create the folder
-    cd helpful_git_alias || {
-      echo >&2 "Unable to create installer $?"
-      exit 1
-    }
-    #Install
-    make install || {
-    echo >&2 "${RED}Installation failed ! $?${NC}"
-    exit 1
-    }
-    #delete installer
-    cd ..
-    rm -rf helpful_git_alias
 fi
 
-# Loop through each custom command file and install it
-# for command_file in "$CUSTOM_COMMANDS_DIR"/*; do
-#     if [ -f "$command_file" ]; then
-#         # Get the command name (without the .sh extension)
-#         command_name=$(basename "$command_file" .sh)
+echo "${GREEN}Installing...${NC}"
+git clone https://github.com/akashvarde/helpful_git_alias.git --depth=1 || {
+  echo >&2 "${RED}Clone failed with $?${NC}"
+  exit 1
+}
+# Create the folder
+cd helpful_git_alias || {
+  echo >&2 "Unable to create installer $?"
+  exit 1
+}
+#Install
+make install || {
+echo >&2 "${RED}Installation failed ! $?${NC}"
+exit 1
+}
+#delete installer
+cd ..
+rm -rf helpful_git_alias
 
-#         # Install the command globally
-#         cp "$command_file" "$GLOBAL_BIN_DIR/$command_name"
-#         chmod +x "$GLOBAL_BIN_DIR/$command_name"
-#         echo "Installed $command_name"
-#     fi
-# done
-
-cd Helpful_Git_Alias || exit
+cd helpful_git_alias || exit
 
 make install || {
   echo >&2 "Clone failed with $?"
@@ -93,7 +80,7 @@ make install || {
 
 cd ..
 
-rm -rf Helpful_Git_Alias
+rm -rf helpful_git_alias
 
 
 echo "Added alises to PATH Variable ...."
