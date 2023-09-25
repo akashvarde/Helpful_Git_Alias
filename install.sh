@@ -5,7 +5,15 @@ GREEN='\033[0;32m'   # Green color
 RED='\033[0;31m'     # Red color 
 YELLOW='\033[0;33m'  # Yello color
 NC='\033[0m'          # No color (reset)
-
+log_error(){
+    echo "${RED}$1${NC}"
+}
+log_warning(){
+    echo "${YELLOW}$1${NC}"
+}
+log_success(){
+    echo "${GREEN}$1${NC}"
+}
 
 # Define the directory where custom Git commands are located
 CUSTOM_COMMANDS_DIR="$(pwd)/aliases"
@@ -70,5 +78,5 @@ exit 1
 cd ..
 rm -rf helpful_git_alias
 
-echo "Added alises to PATH Variable ...."
-echo "Custom Git commands installed successfully!"
+log_success "Added alises to PATH Variable ...."
+log_success "Custom Git commands installed successfully!"
