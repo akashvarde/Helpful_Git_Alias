@@ -44,3 +44,4 @@ shellcheck:
 
 shfmt:
 	./actions/shfmt
+
