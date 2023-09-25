@@ -70,17 +70,5 @@ exit 1
 cd ..
 rm -rf helpful_git_alias
 
-cd helpful_git_alias || exit
-
-make install || {
-  echo >&2 "Clone failed with $?"
-  exit 1
-}
-
-cd ..
-
-rm -rf helpful_git_alias
-
-
 echo "Added alises to PATH Variable ...."
 echo "Custom Git commands installed successfully!"
