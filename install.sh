@@ -35,7 +35,7 @@ if [ -f "/usr/local/bin/git-createdeployement" ]; then
     echo "Looks like you have earlier installed our program. Do you want to proceed with the update/reinstall? (y/n)"
    
     #stty -echo   # Turn off echoing
-    read choice
+    read -r choice
     #stty echo    # Turn echoing back on
 
  
