@@ -1,57 +1,267 @@
 #!/bin/sh
+GREEN='\033[0;32m'   # Green color
+YELLOW='\033[0;33m'  # Yello color
 RED='\033[0;31m'     # Red color 
 NC='\033[0m'          # No color (reset)
-deployement_env=$1 # First parameter wtll be the DEPLOYEMENT ENV
+deployment_env=$1 # First parameter wtll be the DEPLOYEMENT ENV
 currentBranch=$(git symbolic-ref --short -q HEAD) # Getting the current branch 
+formatted_date=$(date +"%d_%m_%Y_%H_%M_%S")
+new_branch="AUTO_RELEASE/$deployment_env/$currentBranch"_"$formatted_date"
+TRUE=0
+FALSE=1
 
+#code starts here ...
 
+#functions 
+log_error(){
+    echo "${RED}$1${NC}"
+}
+log_warning(){
+    echo "${YELLOW}$1${NC}"
+}
+log_success(){
+    echo "${GREEN}$1${NC}"
+}
+exit_gracefully(){
+    #before this line check if we are in AUTO-GENRATED BRANCH , if yes , performe git reset HEAD to remove all git conflicts and perform a -D operation on new branch, then checkout to original current branch as done in  below line of code 
+    git_checkout $currentBranch
+    #write code to delete AUTO-Generated $new_branch
+    #Write code if checkout was successfult if not print failed to checkout gracefully
+}
+#main 
+are_both_branches_diff(){
+    local local_current_branch=$(git symbolic-ref --short -q HEAD)  
+    if [ "$1" = "$local_current_branch" ]; then 
+        return $FALSE  
+    else 
+        return $TRUE   
+    fi
+}
+check_if_branch_exists(){
+     if ! git show-ref --verify --quiet "refs/heads/$1" > /dev/null 2>&1 ; then
+        log_error "Error: The Target branch '$1' does not exist locally."
+        log_error "Please make sure the branch exists and is spelled correctly."
+        exit
+    fi
+}
+check_if_any_uncommited_changes_or_checkout(){
 
-function checkout_to_deployment_env() {
-    echo "$deployment_env"
-    exit 1
-
-    echo "Checking out to Deployment Branch: $deployment_env"
-
-    # Check if the deployment branch exists locally
-    if ! git show-ref --verify --quiet "refs/heads/$deployment_env"; then
-        echo "Error: The deployment branch '$deployment_env' does not exist locally."
-        echo "Please make sure the branch exists and is spelled correctly."
-        return 1
+    # Check if there are unstaged changes
+    if git diff --quiet; then
+    unstaged_changes=false
+    else
+    unstaged_changes=true
     fi
 
+    # Check if there are staged changes
+    if git diff --cached --quiet; then
+    staged_changes=false
+    else
+    staged_changes=true
+    fi
     # Check for uncommitted changes
-    if ! git diff --quiet; then
-        echo "Error: There are uncommitted changes in the current branch."
-        echo "Please commit or stash your changes before switching to '$deployment_env'."
-        return 1
+    if [ "$staged_changes" = true ] || [ "$unstaged_changes" = true ]; then
+        log_warning "Hey! There are uncommitted changes in the current branch. Do you still want to checkout (y/n) ?"
+        read choice
+        if [ "$choice" = "y" ] || [ "$choice" = "Y" ]; then
+            echo "Attempting checkout to $deployment_env ..."
+            attempt_git_checkout $deployment_env 
+            # Add your update logic here
+        elif [ "$choice" = "n" ] || [ "$choice" = "N" ]; then
+            log_error "Aborting deployement ..."
+            log_error "Please commit your changes and try again ..."
+            exit
+        else
+            echo "${RED}Invalid choice. \nAborting...${NC}"
+            exit
+        fi
+    else
+        attempt_git_checkout $deployment_env
     fi
+}
+attempt_git_checkout(){
+    branch_b4_checkout=$(git symbolic-ref --short -q HEAD)
+    git checkout "$1" > /dev/null 2>&1  
+    branch_after_checkout=$(git symbolic-ref --short -q HEAD)
 
-    # Check out to the deployment branch
-    git checkout "$deployment_env"
-    return $?
+    if [ "$branch_b4_checkout" = "$branch_after_checkout" ]; then 
+        log_error "Error: Unable to checkout branch: $1"
+        git checkout "$1"
+        log_error "Please commit or stash your changes before switching to '$deployment_env'."
+        log_warning "Currently in branch $branch_after_checkout"
+    else
+        log_success "checked out branch: $1"
+    fi
+}
+checkout_to_deployment_env(){
+    sleep 1.2 #to simualte working speed to user
+    log_success "Performing checkout to Target Branch: $deployment_env"
+    sleep .6 #to simualte working speed to user
+    check_if_branch_exists $deployment_env
+    check_if_any_uncommited_changes_or_checkout $deployment_env 
+}  
+create_release_branch(){
+    git checkout -b $new_branch > /dev/null 2>&1  || echo "${RED}Unable to create release branch from $deployment_env ${NC}"
+}
+# Function to check if the "origin" remote exists
+check_origin_exists(){
+    git remote show origin >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        log_error "Error: The 'origin' remote does not exist."
+        log_warning "Looks like you are working in a local git repository. Currently we do not support local git repo... Please set up the 'origin' remote & try again."
+        exit 1
+    fi
 }
 
+# Function to check if a branch exists on the origin repository
+check_target_branch_exists_on_origin(){
+    local branch_name="$1"
+    
+    git ls-remote --exit-code --heads origin "$branch_name" >/dev/null 2>&1
+    
+    if [ $? -ne 0 ]; then
+        log_error "Error: Branch '$branch_name' for which you want to create deployement for, does not exist on the origin repository."
+        log_warning "Please push your branch $branch_name to remote & try again."
+        exit 1
+    fi
+}
+git_pull_origin(){
+    git pull origin $1 # Change 'master' to the branch you want to pull from if necessary
 
+    # Check the exit status of the git pull command
+    if [ $? -eq 0 ]; then
+        echo "Pulled latest changes from origin/$1 successful..."
+    else
+        log_error "Error: Git pull from origin/$1 failed."
+        exit 1
+    fi
+}
+merge_base_branch(){
+    log_warning "Merging changes from (local) $1 ... "
+    git merge $1
+    # Check the exit status of the git merge command
+    if [ $? -eq 0 ]; then
+        log_success "Successfully created Deployement Branch : $new_branch "
+        echo "Merged (local) $1 => (origin) $deployment_env"
+    else
+        log_error "Error: Unable to merge changes from branch '$1'"
+        log_warning "Unfortunately Auto-merge have conflicts ..."
+        log_warning "Do you wanna manually resolve any merge conflicts OR abort deployement"
+        log_warning "Press (y) to continue manually OR (n) to abort auto deployement"
+        read choice
+        if [ "$choice" = "y" ] || [ "$choice" = "Y" ]; then
+            echo "You choose to merge manually ... Happy coding ..."
+            exit
+            # Add your update logic here
+        elif [ "$choice" = "n" ] || [ "$choice" = "N" ]; then
+            echo "Aborting Auto-Deployement ... Getting you back to $currentBranch ..."
+            git merge --abort >/dev/null 2>&1
+            git checkout  $currentBranch >/dev/null 2>&1
+            log_warning "You are back to your base branch $currentBranch"
+            exit
+        else
+            echo "${RED}Invalid choice. \nAborting...${NC}"
+            git merge --abort >/dev/null 2>&1
+            git checkout  $currentBranch >/dev/null 2>&1
+            log_warning "You are back to your base branch $currentBranch"
+            exit
+        fi 
+        exit 1
+    fi
+}
+ask_if_wanna_merge_to_deployement(){
+    log_success "An deployment branch has been created ( $new_branch )."
+    log_warning "You can create a PULL REQUEST via git UI. We also offer the choice to DIRECTLY MERGE these changes into the actual remote $deployment_env branch. This action will bypass the PR process. if you want to directly merge changes and avoid PR enter 'deploy' to exit press any key/enter ?"
+        read choice
+        if [ "$choice" = "deploy" ] || [ "$choice" = "deploy" ]; then
+           perform_final_merge
+            exit
+            # Add your update logic here
+        else
+           echo "You can now raise a PR request ...";
+           echo "Happy coding ...";
+           exit
+        fi 
+}
+perform_final_merge(){
+    log_warning "COnfirmation Required ! We are going to push your changes directly to live $deployment_env branch and avoid PR request. Only proceed if you have checked changes twice .. "
+    log_warning "You can still take time , test your changes and the answer (y/n). Do you want to continue ?"
+    read final_choice
+    if [ "$final_choice" = "y" ] || [ "$final_choice" = "Y" ]; then
+    final_merge
+    elif [ "$final_choice" = "n" ] || [ "$final_choice" = "N" ]; then
+    echo "You choose to abort auto-merge to remote $deployment_env "
+    log_warning "You are in branch $currentBranch ... You can still perform manual merge ..."
+    exit
+    else
+    log_error "Invalid choice."
+    log_error "Abooting merge to remote $deployment_env..."
+    log_warning "You are in branch $currentBranch ... You can still perform manual merge ..."
+    exit
+    fi 
+}
+function return_to_base_branch(){
+    log_warning "Do you want to switch back original branch (y/n)?"
+    read choice_to_switch
+    if [ "$choice_to_switch" = "y" ] || [ "$choice_to_switch" = "Y" ]; then
+    git checkout $currentBranch
+    elif [ "$choice_to_switch" = "n" ] || [ "$choice_to_switch" = "N" ]; then
+    current_pwd=$(git symbolic-ref --short -q HEAD)
+    echo "You choose to stay in branch.. Your current branch is  $current_pwd " 
+    exit
+    else
+    echo "Invalid choice..." 
+    echo "Your current branch is  $current_pwd " 
+    exit
+    fi 
+}
 
-
+final_merge(){
+    git checkout -b "$deployment_env""_$formatted_date" origin/$deployment_env >/dev/null 2>&1
+    if [ ! $? -eq 0 ]; then 
+        log_error "Error : Cannot pull latest changes from remote origin/$deployment_env ..."
+        log_error "Aborting Auto-Merge to origin/$deployment_env ..."
+        log_warning "You are in branch $currentBranch ... You can still perform manual merge ..."
+    fi
+    echo "Performing final merge $new_branch => $deployment_env ..."
+    git merge $new_branch >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Merge completed ..."
+        git push origin "$deployment_env""_$formatted_date:$deployment_env"
+        if [ $? -eq 0 ]; then
+        log_success "Successful ! $deployment_env have latest code !"
+        else 
+        log_error "Error : Unable to push latest changes from remote origin/$deployment_env ..."
+        log_warning "Reverting back to Auto-Deployement branch $new_branch , You can continue release manually ..."
+        git merge --abort
+        git checkout  $new_branch >/dev/null 2>&1
+        fi
+    else
+        log_error "Error: Unable to merge changes. The automated merge process encountered issues."
+        log_warning "Unfortunately, automatic merging failed due to conflicts."
+        log_warning "Because of these conflicts, we cannot proceed with the merge. Please create a pull request manually."
+        log_info "We will revert back to the Auto-Deployment branch $new_branch. You can continue the release process manually."
+        git merge --abort
+        git checkout  $new_branch >/dev/null 2>&1
+    fi
+}
 if [ ! -z "$1" ] # checking if the commtt message is present. If not then aborting. 
 then 
-   echo "Creating a deployement for $deployement_env"
-   checkout_to_deployment_env
-   
-   formatted_date=$(date +"%d_%m_%Y_%H_%M_%S")
-   new_branch="$currentBranch"_"$formatted_date"
-   echo "Creating new release branch RELEASE/$deployement_env/$new_branch"
-   git checkout -b RELEASE/$deployement_env/$new_branch || echo "${RED}Unable to create release branch from $deployement_env ${NC}"
-   echo "Pulling changes from origin/$deployement_env"
-   git pull origin $deployement_env || echo "${RED}Unable to pull from remote origin/$deployement_env branch${NC}"
-   echo "Pull successful..."
-   echo "Merging changes from $currentBranch to Release branch..."
-   merge_op=$(git merge $currentBranch)  
-   echo "$merge_op"
-   
-else 
+    if are_both_branches_diff $deployment_env -eq $TRUE; then 
+        check_origin_exists
+        check_target_branch_exists_on_origin $deployment_env
+        echo "Creating a deployement for $deployment_env ...."
+        checkout_to_deployment_env $deployment_env
+        log_warning "Creating Release Branch as -> $new_branch ..."
+        create_release_branch $new_branch
+        log_warning "Pulling changes for origin/$deployment_env ..."
+        git_pull_origin $deployment_env
+        merge_base_branch $currentBranch
+        ask_if_wanna_merge_to_deployement $deployment_env
+    else
+        log_error "Error: You are already in branch ($currentBranch). Releases can only be created from a different branch to target branch. You are attempting to create a release within the same branch, which is not allowed."
+        log_warning "Correct Usage : To create a release for Branch B to Branch A. First checkout to Branch B and then try 'git createdeployement A'"
+    fi    
+else
     echo "${RED}Deployement Branch not provided${NC}"
 fi
-
- 
