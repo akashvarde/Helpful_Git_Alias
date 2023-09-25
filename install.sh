@@ -47,7 +47,7 @@ if [ -f "/usr/local/bin/git-createdeployement" ]; then
     echo "${RED}Update cancelled.${NC}"
     exit 1
     else
-    echo "${RED}Invalid choice. \nAborting...${NC}"
+    echo "${RED}Invalid choice. \nAborting... choice was abc$choice abc ${NC}"
     exit 1
     fi
 fi
