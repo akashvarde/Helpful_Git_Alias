@@ -200,7 +200,7 @@ perform_final_merge(){
     exit
     fi 
 }
-function return_to_base_branch(){
+return_to_base_branch(){
     log_warning "Do you want to switch back original branch (y/n)?"
     read choice_to_switch
     if [ "$choice_to_switch" = "y" ] || [ "$choice_to_switch" = "Y" ]; then
