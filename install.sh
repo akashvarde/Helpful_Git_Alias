@@ -1,4 +1,4 @@
-#!/bin/sh
+t#!/bin/sh
 
 # Define ANSI color escape codes
 GREEN='\033[0;32m'   # Green color
@@ -81,3 +81,4 @@ rm -rf helpful_git_alias
 log_success "Added alises to PATH Variable ...."
 log_success "Custom Git commands installed successfully!"
 log_success "You can now use command `git createdeployement <target_branch>`"
+exit 1
