@@ -32,24 +32,23 @@ fi
 ## Akash Varde :  Create folder for storing git commands 
 # Check if the folder already exists
 if [ -f "/usr/local/bin/git-createdeployement" ]; then
-    echo "Looks like you have earlier installed our program. Do you want to proceed with the update/reinstall? (y/n)"
-   
-    #stty -echo   # Turn off echoing
-    read -r choice
-    #stty echo    # Turn echoing back on
-
- 
+    
+    ##COMMENTING THIS CHANGES AS THIS WILL NOT WORK ON A SH SHELL
+      # echo "Looks like you have earlier installed our program. Do you want to proceed with the update/reinstall? (y/n)"
+      # read choice  
     # Check the user's choice
-    if [ "$choice" = "y" ] || [ "$choice" = "Y" ]; then
-    echo "${GREEN}Updating...${NC}"
+      # if [ "$choice" = "y" ] || [ "$choice" = "Y" ]; then
+      # echo "${GREEN}Updating...${NC}"
     # Add your update logic here
-    elif [ "$choice" = "n" ] || [ "$choice" = "N" ]; then
-    echo "${RED}Update cancelled.${NC}"
-    exit 1
-    else
-    echo "${RED}Invalid choice. \nAborting... choice was abc$choice abc ${NC}"
-    exit 1
-    fi
+      # elif [ "$choice" = "n" ] || [ "$choice" = "N" ]; then
+      # echo "${RED}Update cancelled.${NC}"
+      # exit 1
+      # else
+      # echo "${RED}Invalid choice. \nAborting...${NC}"
+      # exit 1
+      # fi
+  log_warning "Looks like you have earlier installed the git scripts. Updating..."
+
 fi
 
 echo "${GREEN}Installing...${NC}"
