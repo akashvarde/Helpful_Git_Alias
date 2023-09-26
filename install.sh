@@ -1,4 +1,4 @@
-t#!/bin/sh
+#!/bin/sh
 
 # Define ANSI color escape codes
 GREEN='\033[0;32m'   # Green color
