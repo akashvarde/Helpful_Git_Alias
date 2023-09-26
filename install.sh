@@ -37,11 +37,11 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 
-## Akash Varde :  Create folder for storing git commands 
+# Akash Varde :  Create folder for storing git commands 
 # Check if the folder already exists
 if [ -f "/usr/local/bin/git-createdeployement" ]; then
     
-    ##COMMENTING THIS CHANGES AS THIS WILL NOT WORK ON A SH SHELL
+    # COMMENTING THIS CHANGES AS THIS WILL NOT WORK ON A SH SHELL
       # echo "Looks like you have earlier installed our program. Do you want to proceed with the update/reinstall? (y/n)"
       # read choice  
     # Check the user's choice
