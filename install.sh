@@ -78,5 +78,7 @@ exit 1
 cd ..
 rm -rf helpful_git_alias
 
-log_success "Added alises to PATH Variable ...."
-log_success "Custom Git commands installed successfully!"
+echo "Added alises to PATH Variable ...."
+echo "Custom Git commands installed successfully!"
+log_success "You can now use command `git createdeployement <target_branch>`"
+exit 1
